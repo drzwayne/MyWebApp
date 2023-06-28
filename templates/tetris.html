@@ -1,0 +1,26 @@
+{% extends 'layout.html' %}
+{% block title %}Tetris{% endblock %}
+{% block content %}
+<img class="vid" src="{{ url_for('static', filename='j.gif') }}" >
+<span>
+    <h3 style="font-size:80px; margin-top:80px; margin-left: -50px" >PLAVE</h3>
+    <h4 style="margin-top:-20px; margin-left: -50px">Straykids Everywhere Around the World</h4>
+    <p style="margin-top:-30px; margin-left: -50px">Luoca is coming home</p>
+    <button style="width: 120px; height: 42px; margin-left: -50px; border-radius: 5px; border-color: #fff; background-color:#fff"><i class='fas fa-play'></i> Play</button>
+    <button style="width: 160px; height: 42px; border-radius: 5px; border-color:#4a536e; background-color: #4a536e; color: #fff">More Info</button>
+</span>
+<br>
+<br>
+<div class="things">
+    <img src="{{ url_for('static', filename='ein.jpg') }}" >
+    <img src="{{ url_for('static', filename='sechs.jpg') }}" >
+    <img src="{{ url_for('static', filename='funf.jpg') }}" >
+    <img src="{{ url_for('static', filename='drei.jpg') }}" >
+    <img src="{{ url_for('static', filename='vier.jpg') }}" >
+    <img src="{{ url_for('static', filename='sieben.jpg') }}" >
+    <!--<img style="margin-right: -50px" src="{{ url_for('static', filename='sieben.jpg') }}" >-->
+
+    <!--<img style="width:auto; height:250px" src="{{ url_for('static', filename='herta.gif') }}" >
+    <img style="width:auto; height:250px" src="{{ url_for('static', filename='s2.gif') }}" > -->
+</div>
+{% endblock %}
