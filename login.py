@@ -43,7 +43,11 @@ def login():
             #decrypted_email = f.decrypt(encrypted_email)
             #print(decrypted_email.decode())
             #ms = 'logged in successfully:' + decrypted_email.decode()##
-            return redirect(url_for('home'))
+            email_key = account['emailkey']
+            encrypted_email = account['email'].encode()
+            f = Fernet(email_key)
+            decrypted_email = f.decrypt(encrypted_email)
+            return render_template('home.html', username=username, email=decrypted_email.decode())
     else:
         msg = 'Incorrect username/password!'
     return render_template('index.html', msg='')
@@ -62,13 +66,16 @@ def register():
         email = request.form['email']
         email = email.encode()
         hashpwd = bcrypt.generate_password_hash(password)
-        key = Fernet.generate_key()
-        with open("symmetric.key","wb") as fo:
-            fo.write(key)
-        f = Fernet(key)
-        encrypted_email = f.encrypt(email)
+        #key = Fernet.generate_key()
+        #with open("symmetric.key","wb") as fo:
+        #    fo.write(key)
+        #f = Fernet(key)
+        #encrypted_email = f.encrypt(email)
+        email_key = Fernet.generate_key()
+        email_fernet = Fernet(email_key)
+        encrypted_email = email_fernet.encrypt(email)
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s)', (username, hashpwd, encrypted_email,))
+        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)', (username, hashpwd, encrypted_email, email_key))
         mysql.connection.commit()
         msg = 'You have successfully registered!'
     elif request.method == 'POST':
