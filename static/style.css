@@ -180,8 +180,68 @@ div img {
     height: 210px;
     width: auto;
 }
+.overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: .5s ease;
+  background-color: #b3f903;
+}
+.c1 {
+  position: relative;
+  width: 81%;
+  height: 25%;
+}
+.c1:hover .overlay {
+  opacity: 1;
+  top: 380%;
+}
 
-div img:hover {
-    height: 240px;
-    width: auto;
+.text {
+  color: #020202;
+  font-size: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-100%, -100%);
+  -ms-transform: translate(100%, 100%);
+  transform: translate(-50%, -50%);
+}
+.c2 {
+  position: relative;
+  width: 81%;
+  height: 50%;
+}
+.o2 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  transition: .5s ease;
+  background-color: #ffffff;
+}
+.c2:hover .o2 {
+  opacity: 1;
+  top: 100%;
+}
+
+.text2 {
+  color: #1b1b1b;
+  font-size: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  text-align: center;
 }

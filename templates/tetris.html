@@ -12,8 +12,18 @@
 <br>
 <br>
 <div class="things">
-    <img src="{{ url_for('static', filename='ein.jpg') }}" >
-    <img src="{{ url_for('static', filename='sechs.jpg') }}" >
+    <div class="c1" >
+        <img src="{{ url_for('static', filename='ein.jpg') }}" >
+        <div class="overlay" >
+            <div class="text" ><i class='fas fa-play'></i> <i class='fas fa-chevron-down' style="padding-left: 40px" title="More Info" ></i></div>
+        </div>
+    </div>
+    <div class="c2" >
+        <img src="{{ url_for('static', filename='sechs.jpg') }}" >
+        <div class="o2">
+            <div class="text2" ><i class='fas fa-play'></i> <i class='fas fa-chevron-down'></i></div>
+        </div>
+    </div>
     <img src="{{ url_for('static', filename='funf.jpg') }}" >
     <img src="{{ url_for('static', filename='drei.jpg') }}" >
     <img src="{{ url_for('static', filename='vier.jpg') }}" >
