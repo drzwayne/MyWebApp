@@ -13,16 +13,17 @@
 <br>
 <div class="things">
     <div class="c1" >
-        <img src="{{ url_for('static', filename='ein.jpg') }}" >
-        <div class="overlay" >
-            <div class="text" ><i class='fas fa-play'></i> <i class='fas fa-chevron-down' style="padding-left: 40px" title="More Info" ></i></div>
-        </div>
-    </div>
-    <div class="c2" >
         <img src="{{ url_for('static', filename='sechs.jpg') }}" >
-        <div class="o2">
-            <div class="text2" ><i class='fas fa-play'></i> <i class='fas fa-chevron-down'></i></div>
+        <div class="overlay">
+            <div class="text" >
+                <a href="{{ url_for('vone') }}" style="color: #ed5657" ><i class='fas fa-play' title="Play" ></i></a> <a href="{{ url_for('home') }}"style="color: #02ada5" ><i class='fas fa-chevron-down' style="padding-left: 40px" title="More Info"></i></a>
+            </div><br>
+            <div class="description" >
+                2022 13EP NC16 <br>
+                Gal Pals, Action
+            </div>
         </div>
+
     </div>
     <img src="{{ url_for('static', filename='funf.jpg') }}" >
     <img src="{{ url_for('static', filename='drei.jpg') }}" >
@@ -31,6 +32,24 @@
     <!--<img style="margin-right: -50px" src="{{ url_for('static', filename='sieben.jpg') }}" >-->
 
     <!--<img style="width:auto; height:250px" src="{{ url_for('static', filename='herta.gif') }}" >
+
+            <div>
+            <p>2022 12EP NC16</p>
+            <p>Comedy Anime, Gal Pals, Japanese</p>
+            <p>A friendless high school student who loves playing guitar joins a rock band and slowly begins to come out of her shell</p>
+        </div>
     <img style="width:auto; height:250px" src="{{ url_for('static', filename='s2.gif') }}" > -->
 </div>
+        <div class="info1" >
+            <div  class="infotxt">
+            2022 13EP<strong>  NC16</strong> <br>
+            Gal Pals, Action <br> <br>
+            Reprimanded for ignoring orders during a mission, serious secret agent Takina gets transferred to a cafe and partners up with the plucky Chisato <br><br>
+            <a href="{{ url_for('vone') }}" style="color: #ed5657" ><i class='fas fa-play' title="Play" ></i></a>
+            </div>
+            <img src="{{ url_for('static', filename='lr.jpg') }}" >
+            <div class="cancel" >
+                <i class="fas fa-window-close"></i>
+            </div>
+        </div>
 {% endblock %}

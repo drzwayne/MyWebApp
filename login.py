@@ -99,5 +99,8 @@ def tetris():
     if 'loggedin' in session:
         return render_template('tetris.html')
     return redirect(url_for('login'))
+@app.route('/vone')
+def vone():
+    return render_template('vone.html')
 if __name__== '__main__':
     app.run()
