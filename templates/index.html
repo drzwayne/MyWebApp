@@ -19,6 +19,12 @@
             <label for="password">
             <i class="fas fa-lock"></i></label>
             <input type="password" name="password" placeholder="Password" id="password" required><div class="msg">{{ msg }}</div>
+            {{ form.recaptcha }}
+{% for error in form.recaptcha.errors %}
+<ul>
+<li style="color:red;">{{ error }}</li>
+{% endfor %}
+</ul>
             <input type="submit" value="Login">
         </form>
     </div>
