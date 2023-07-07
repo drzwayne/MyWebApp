@@ -2,26 +2,29 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from flask_bcrypt import Bcrypt
+from flask_wtf import FlaskForm, RecaptchaField
 import re
 import cryptography
 from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-# Change this to your secret key (can be anything, it's for extra protection)
 app.secret_key = 'your secret key'
-# Enter your database connection details below
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'sql123lqs321'
 app.config['MYSQL_DB'] = 'pythonlogin'
 app.config['MYSQL_PORT'] = 3306
-# Intialize MySQL
 mysql = MySQL(app)
-# http://localhost:5000/MyWebApp/ - this will be the login page, we need to use both GET and POST #requests
+app.config['SECRET_KEY'] = 'Thisisasecret!'
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6LciR-0mAAAAAEukfwSdVCfdo4CJOQ2H6PxeOQ4f' #remove mine and insert yours
+app.config['RECAPTCHA_PRIVATE_KEY'] = '6LciR-0mAAAAAPXpIIsU8WgGK7lgVHW_Vt-WcXyM'  #do the same^^^
+class LoginForm(FlaskForm):
+    recaptcha = RecaptchaField()
 @app.route('/', methods=['GET', 'POST'])
 def login():
     msg = ''
+    formL = LoginForm()
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         username = request.form['username']
         password = request.form['password']
@@ -29,7 +32,6 @@ def login():
         cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
         account = cursor.fetchone()
         user_hashpwd = account['password']
-        #user_hashpwd = bcrypt.generate_password_hash(password)
         if account and bcrypt.check_password_hash(user_hashpwd, password):
             session['loggedin'] = True
             session['id'] = account['id']
@@ -48,9 +50,9 @@ def login():
             f = Fernet(email_key)
             decrypted_email = f.decrypt(encrypted_email)
             return render_template('home.html', username=username, email=decrypted_email.decode())
-    else:
-        msg = 'Incorrect username/password!'
-    return render_template('index.html', msg='')
+        else:
+            msg = 'Incorrect username/password!'
+    return render_template('index.html', msg=msg, form=formL)
 @app.route('/logout')
 def logout():
     session.pop('loggedin', None)
@@ -66,11 +68,6 @@ def register():
         email = request.form['email']
         email = email.encode()
         hashpwd = bcrypt.generate_password_hash(password)
-        #key = Fernet.generate_key()
-        #with open("symmetric.key","wb") as fo:
-        #    fo.write(key)
-        #f = Fernet(key)
-        #encrypted_email = f.encrypt(email)
         email_key = Fernet.generate_key()
         email_fernet = Fernet(email_key)
         encrypted_email = email_fernet.encrypt(email)
@@ -103,4 +100,4 @@ def tetris():
 def vone():
     return render_template('vone.html')
 if __name__== '__main__':
-    app.run()
+    app.run(debug=True)
