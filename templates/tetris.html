@@ -16,11 +16,11 @@
         <img src="{{ url_for('static', filename='sechs.jpg') }}" >
         <div class="overlay">
             <div class="text" >
-                <a href="{{ url_for('vone') }}" style="color: #ed5657" ><i class='fas fa-play' title="Play" ></i></a> <a href="{{ url_for('home') }}"style="color: #02ada5" ><i class='fas fa-chevron-down' style="padding-left: 40px" title="More Info"></i></a>
+                <a href="{{ url_for('vone') }}" style="color: #ed5657" ><i class='fas fa-play' title="Play" ></i></a><a class="more1" ><i class='fas fa-chevron-down' style="color: #02ada5;padding-left: 40px; cursor: pointer" title="More Info"></i></a>
             </div><br>
             <div class="description" >
-                2022 13EP NC16 <br>
-                Gal Pals, Action
+                <strong style="font-size:10px" >Lycoris Recoil</strong> <br>
+                2022 13EP NC16
             </div>
         </div>
 
@@ -29,23 +29,13 @@
     <img src="{{ url_for('static', filename='drei.jpg') }}" >
     <img src="{{ url_for('static', filename='vier.jpg') }}" >
     <img src="{{ url_for('static', filename='sieben.jpg') }}" >
-    <!--<img style="margin-right: -50px" src="{{ url_for('static', filename='sieben.jpg') }}" >-->
-
-    <!--<img style="width:auto; height:250px" src="{{ url_for('static', filename='herta.gif') }}" >
-
-            <div>
-            <p>2022 12EP NC16</p>
-            <p>Comedy Anime, Gal Pals, Japanese</p>
-            <p>A friendless high school student who loves playing guitar joins a rock band and slowly begins to come out of her shell</p>
-        </div>
-    <img style="width:auto; height:250px" src="{{ url_for('static', filename='s2.gif') }}" > -->
 </div>
-        <div class="info1" >
+        <div class="info1" id="if1" >
             <div  class="infotxt">
             2022 13EP<strong>  NC16</strong> <br>
             Gal Pals, Action <br> <br>
             Reprimanded for ignoring orders during a mission, serious secret agent Takina gets transferred to a cafe and partners up with the plucky Chisato <br><br>
-            <a href="{{ url_for('vone') }}" style="color: #ed5657" ><i class='fas fa-play' title="Play" ></i></a>
+            <a href="{{ url_for('vone') }}" style="color: #ed5657" ><button style="width: 120px; height: 42px; border-radius: 5px; border-color: #ed5657; color:#fff; background-color:#ed5657"><i class='fas fa-play'></i> Play</button></a>
             </div>
             <img src="{{ url_for('static', filename='lr.jpg') }}" >
             <div class="cancel" >
