@@ -49,7 +49,7 @@ def login():
             encrypted_email = account['email'].encode()
             f = Fernet(email_key)
             decrypted_email = f.decrypt(encrypted_email)
-            return render_template('home.html', username=username, email=decrypted_email.decode())
+            return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
             msg = 'Incorrect username/password!'
     return render_template('index.html', msg=msg, form=formL)
