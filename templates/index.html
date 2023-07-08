@@ -17,14 +17,15 @@
             {{ form.csrf_token }}
             <label for="username"><i class="fas fa-user"></i></label>
             <input type="text" name="username" placeholder="Username" id="username" required>
-            <label for="password">
-            <i class="fas fa-lock"></i></label>
-            <input type="password" name="password" placeholder="Password" id="password" required><div class="msg">{{ msg }}</div>
+                <label for="password">
+                <i class="fas fa-lock"></i></label>
+                <input type="password" name="password" placeholder="Password" id="password" required>
+            <div class="msg">{{ msg }}</div>
             {{ form.recaptcha }}
             {% for error in form.recaptcha.errors %}
             <ul>
-            <li style="color:red;">{{ error }}</li>
-            {% endfor %}
+                <li style="color:red;">{{ error }}</li>
+                {% endfor %}
             </ul>
             <input type="submit" value="Login">
         </form>

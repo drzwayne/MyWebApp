@@ -3,8 +3,11 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm, RecaptchaField
+from wtforms import StringField, PasswordField
+from wtforms.validators import InputRequired, Length, AnyOf
 import re
 import cryptography
+import attempt
 from cryptography.fernet import Fernet
 
 app = Flask(__name__)
@@ -51,7 +54,14 @@ def login():
             decrypted_email = f.decrypt(encrypted_email)
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
-            msg = 'Incorrect username/password!'
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('UPDATE accounts SET attempts = 1 WHERE username = %s', (request.form['username'],))
+            cursor.execute('SELECT attempts FROM accounts WHERE attempts = 3')
+            account = cursor.fetchone()
+            if account:
+                msg = 'Account locked!'
+            else:
+                msg = 'Incorrect username/password!'
     return render_template('index.html', msg=msg, form=formL)
 @app.route('/logout')
 def logout():
@@ -71,8 +81,9 @@ def register():
         email_key = Fernet.generate_key()
         email_fernet = Fernet(email_key)
         encrypted_email = email_fernet.encrypt(email)
+        attempts = 0
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s)', (username, hashpwd, encrypted_email, email_key))
+        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %d)', (username, hashpwd, encrypted_email, email_key, attempts,))
         mysql.connection.commit()
         msg = 'You have successfully registered!'
     elif request.method == 'POST':
