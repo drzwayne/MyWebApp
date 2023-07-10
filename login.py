@@ -15,7 +15,7 @@ bcrypt = Bcrypt(app)
 app.secret_key = 'your secret key'
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'sql123lqs321'
+app.config['MYSQL_PASSWORD'] = 'mysql'
 app.config['MYSQL_DB'] = 'pythonlogin'
 app.config['MYSQL_PORT'] = 3306
 mysql = MySQL(app)
@@ -39,15 +39,7 @@ def login():
             session['loggedin'] = True
             session['id'] = account['id']
             session['username'] = account['username']
-            ##decryption codes
-            #encrypted_email = account['email'].encode()
-            #file = open("symmetric.key","rb")
-            #key = file.read()
-            #file.close()
-            #f = Fernet(key)
-            #decrypted_email = f.decrypt(encrypted_email)
-            #print(decrypted_email.decode())
-            #ms = 'logged in successfully:' + decrypted_email.decode()##
+
             email_key = account['emailkey']
             encrypted_email = account['email'].encode()
             f = Fernet(email_key)
@@ -83,7 +75,7 @@ def register():
         encrypted_email = email_fernet.encrypt(email)
         attempts = 0
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %d)', (username, hashpwd, encrypted_email, email_key, attempts,))
+        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)', (username, hashpwd, encrypted_email, email_key, attempts,))
         mysql.connection.commit()
         msg = 'You have successfully registered!'
     elif request.method == 'POST':
