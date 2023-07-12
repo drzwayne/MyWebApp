@@ -84,6 +84,7 @@ def login():
             else:
                 tries += 1
                 print(tries)
+                msg = 'Incorrect password/username'
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
 def goo():

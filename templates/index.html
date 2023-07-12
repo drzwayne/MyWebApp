@@ -20,7 +20,6 @@
             <label for="password">
             <i class="fas fa-lock"></i></label>
             <input type="password" name="password" placeholder="Password" id="password" required>
-            <br><a href='/goo'><i style='color: black; font-size:24px' class='fab fa-google'></i></a><br>
             <div class="msg">{{ msg }}</div><br>
             {{ form.recaptcha }}
             {% for error in form.recaptcha.errors %}
@@ -28,8 +27,10 @@
                 <li style="color:red;">{{ error }}</li>
                 {% endfor %}
             </ul>
+            <br><a href='/goo'><i style='color: black; font-size:24px' class='fab fa-google'></i></a><br>
             <input type="submit" name="enter" value="Login">
         </form>
+
     </div>
 </body>
 </html>
