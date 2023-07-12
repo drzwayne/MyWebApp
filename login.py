@@ -75,7 +75,8 @@ def login():
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
             tries = 0
-            if tries >= 3:
+            num = list()
+            if len(num) >= 3:
                     cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
                     cursor.execute('SELECT * FROM accounts WHERE username = %s', (request.form['username'],))
                     account = cursor.fetchone()
@@ -83,7 +84,8 @@ def login():
                         msg = 'Account locked!'
             else:
                 tries += 1
-                print(tries)
+                num.append(tries)
+                print(len(num))
                 msg = 'Incorrect password/username'
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
