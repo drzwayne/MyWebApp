@@ -52,6 +52,8 @@ def login_is_required(function):
             return function()
 
     return wrapper
+global tries
+tries = 0
 @app.route('/', methods=['GET', 'POST'])
 def login():
     msg = ''
@@ -74,19 +76,16 @@ def login():
             decrypted_email = f.decrypt(encrypted_email)
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
-            tries = 0
-            num = list()
-            if len(num) >= 3:
-                    cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-                    cursor.execute('SELECT * FROM accounts WHERE username = %s', (request.form['username'],))
-                    account = cursor.fetchone()
-                    if account:
-                        msg = 'Account locked!'
-            else:
+            def trial():
+                global tries
                 tries += 1
-                num.append(tries)
-                print(len(num))
-                msg = 'Incorrect password/username'
+                print(tries)
+                if tries > 2:
+                    msg = 'Account locked'
+                else:
+                    msg = 'Incorrect password/username'
+                return render_template('index.html', msg=msg, form=formL)
+            trial()
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
 def goo():
@@ -164,4 +163,4 @@ def vone():
     return render_template('vone.html')
 
 if __name__== '__main__':
-    app.run(port=80,debug=True)
+    app.run(host='127.0.0.1', port=80,debug=True)
