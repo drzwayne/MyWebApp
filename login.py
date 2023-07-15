@@ -64,15 +64,25 @@ def login():
         account = cursor.fetchone()
         user_hashpwd = account['password']
         if account and bcrypt.check_password_hash(user_hashpwd, password):
-            session['loggedin'] = True
-            session['id'] = account['id']
-            session['username'] = account['username']
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curuse = request.form['username']
+            print(curuse)
+            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
+            #cursor.execute('SELECT attempts FROM accounts WHERE username = %s', (curuse,))
+            mysql.connection.commit()
+            account = cursor.fetchone()
+            if account:
+                session['loggedin'] = True
+                session['id'] = account['id']
+                session['username'] = account['username']
 
-            email_key = account['emailkey']
-            encrypted_email = account['email'].encode()
-            f = Fernet(email_key)
-            decrypted_email = f.decrypt(encrypted_email)
-            return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+                email_key = account['emailkey']
+                encrypted_email = account['email'].encode()
+                f = Fernet(email_key)
+                decrypted_email = f.decrypt(encrypted_email)
+                return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+            return render_template('home.html', form=formL, username=username)
         else:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             curuse = request.form['username']
