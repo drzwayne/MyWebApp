@@ -5,21 +5,26 @@
 
 
 
-<!--
-            class loginlimit:
-                limit = 0
-                msg = 'Incorrect username/password!!'
-                def __init__(self):
-                    loginlimit.limit += 1
-                    print(loginlimit.limit)
-                def locked(self):
-                    if loginlimit.limit > 3:
-                        msg = 'Account locked, approach admin.'
-                        loginlimit.limit = 0
-            loginlimit()
-        #key = Fernet.generate_key()
-        #with open("symmetric.key","wb") as fo:
-        #    fo.write(key)
-        #f = Fernet(key)
-        #encrypted_email = f.encrypt(email) -->
+<!--            def trial():
+                global tries
+                tries += 1
+                print(tries)
+                if tries > 2:
+                    msg = 'Account locked'
+                else:
+                    msg = 'Incorrect password/username'
+                return render_template('index.html', msg=msg, form=formL)
+            trial()
+
+
+                    email = email.encode()
+        hashpwd = bcrypt.generate_password_hash(password)
+        email_key = Fernet.generate_key()
+        email_fernet = Fernet(email_key)
+        encrypted_email = email_fernet.encrypt(email)
+        attempts = 0
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)', (username, hashpwd, encrypted_email, email_key, attempts,))
+        mysql.connection.commit()
+        msg = 'You have successfully registered!' -->
 {% endblock %}

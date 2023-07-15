@@ -52,8 +52,6 @@ def login_is_required(function):
             return function()
 
     return wrapper
-global tries
-tries = 0
 @app.route('/', methods=['GET', 'POST'])
 def login():
     msg = ''
@@ -76,16 +74,18 @@ def login():
             decrypted_email = f.decrypt(encrypted_email)
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
-            def trial():
-                global tries
-                tries += 1
-                print(tries)
-                if tries > 2:
-                    msg = 'Account locked'
-                else:
-                    msg = 'Incorrect password/username'
-                return render_template('index.html', msg=msg, form=formL)
-            trial()
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curuse = request.form['username']
+            print(curuse)
+            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
+            cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
+            mysql.connection.commit()
+            account = cursor.fetchone()
+            if account:
+                msg = 'Account locked!'
+            else:
+                msg = 'Incorrect username/password!'
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
 def goo():
@@ -127,16 +127,26 @@ def register():
         username = request.form['username']
         password = request.form['password']
         email = request.form['email']
-        email = email.encode()
-        hashpwd = bcrypt.generate_password_hash(password)
-        email_key = Fernet.generate_key()
-        email_fernet = Fernet(email_key)
-        encrypted_email = email_fernet.encrypt(email)
-        attempts = 0
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)', (username, hashpwd, encrypted_email, email_key, attempts,))
-        mysql.connection.commit()
-        msg = 'You have successfully registered!'
+        cursor.execute("SELECT * FROM accounts WHERE username = %s OR email = %s", (username, email,))
+        existing_account = cursor.fetchone()
+
+        if existing_account:
+            # An account with the same username or email already exists
+            msg = 'An account with the same username or email already exists!'
+        else:
+            # Create a new account
+            email = email.encode()
+            hashpwd = bcrypt.generate_password_hash(password)
+            email_key = Fernet.generate_key()
+            email_fernet = Fernet(email_key)
+            encrypted_email = email_fernet.encrypt(email)
+            attempts = 0
+
+            cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)',
+                           (username, hashpwd, encrypted_email, email_key, attempts,))
+            mysql.connection.commit()
+            msg = 'You have successfully registered!'
     elif request.method == 'POST':
         msg = 'Please fill out the form!'
     return render_template('register.html', msg=msg)
