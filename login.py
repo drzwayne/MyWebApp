@@ -9,13 +9,22 @@ import re
 import cryptography
 import attempt
 from cryptography.fernet import Fernet
+import os
+import pathlib
 
-app = Flask(__name__)
+import requests
+from flask import Flask, session, abort, redirect, request
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from pip._vendor import cachecontrol
+import google.auth.transport.requests
+
+app = Flask("Google Login App")
 bcrypt = Bcrypt(app)
-app.secret_key = 'your secret key'
+app.secret_key = "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" # make sure this matches with that's in client_secret.json
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'mysql'
+app.config['MYSQL_PASSWORD'] = 'sql123lqs321'
 app.config['MYSQL_DB'] = 'pythonlogin'
 app.config['MYSQL_PORT'] = 3306
 mysql = MySQL(app)
@@ -24,6 +33,27 @@ app.config['RECAPTCHA_PUBLIC_KEY'] = '6LciR-0mAAAAAEukfwSdVCfdo4CJOQ2H6PxeOQ4f' 
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LciR-0mAAAAAPXpIIsU8WgGK7lgVHW_Vt-WcXyM'  #do the same^^^
 class LoginForm(FlaskForm):
     recaptcha = RecaptchaField()
+
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1" # to allow Http traffic for local dev
+
+GOOGLE_CLIENT_ID = "997230487603-rkve4vba3qvg3pjlmsuujbcpcsjnoeii.apps.googleusercontent.com"
+client_secrets_file = os.path.join(pathlib.Path(__file__).parent, "client_secret.json")
+
+flow = Flow.from_client_secrets_file(
+    client_secrets_file=client_secrets_file,
+    scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
+    redirect_uri="http://localhost/callback"
+)
+def login_is_required(function):
+    def wrapper(*args, **kwargs):
+        if "google_id" not in session:
+            return abort(401)  # Authorization required
+        else:
+            return function()
+
+    return wrapper
+global tries
+tries = 0
 @app.route('/', methods=['GET', 'POST'])
 def login():
     msg = ''
@@ -46,23 +76,50 @@ def login():
             decrypted_email = f.decrypt(encrypted_email)
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curuse = (request.form['username'])
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0; UPDATE accounts  SET attempts = attempts + 1 WHERE username = "%s" ', [curuse])
-            cursor.execute('SELECT attempts FROM accounts WHERE attempts = 3')
-            account = cursor.fetchone()
-            if account:
-                msg = 'Account locked!'
-            else:
-                msg = 'Incorrect username/password!'
+            def trial():
+                global tries
+                tries += 1
+                print(tries)
+                if tries > 2:
+                    msg = 'Account locked'
+                else:
+                    msg = 'Incorrect password/username'
+                return render_template('index.html', msg=msg, form=formL)
+            trial()
     return render_template('index.html', msg=msg, form=formL)
+@app.route("/goo")
+def goo():
+    authorization_url, state = flow.authorization_url()
+    session["state"] = state
+    return redirect(authorization_url)
 @app.route('/logout')
 def logout():
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
+    session.clear()
     return redirect(url_for('login'))
+@app.route("/callback")
+def callback():
+    flow.fetch_token(authorization_response=request.url)
+
+    #if not session["state"] == request.args["state"]:
+    #    abort(500)  # State does not match!
+
+    credentials = flow.credentials
+    request_session = requests.session()
+    cached_session = cachecontrol.CacheControl(request_session)
+    token_request = google.auth.transport.requests.Request(session=cached_session)
+
+    id_info = id_token.verify_oauth2_token(
+        id_token=credentials._id_token,
+        request=token_request,
+        audience=GOOGLE_CLIENT_ID
+    )
+
+    session["google_id"] = id_info.get("sub")
+    session["name"] = id_info.get("name")
+    return render_template('home.html', username=session["name"])
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     msg = ''
@@ -104,5 +161,6 @@ def tetris():
 @app.route('/vone')
 def vone():
     return render_template('vone.html')
+
 if __name__== '__main__':
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port=80,debug=True)

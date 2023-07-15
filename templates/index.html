@@ -17,18 +17,22 @@
             {{ form.csrf_token }}
             <label for="username"><i class="fas fa-user"></i></label>
             <input type="text" name="username" placeholder="Username" id="username" required>
-                <label for="password">
-                <i class="fas fa-lock"></i></label>
-                <input type="password" name="password" placeholder="Password" id="password" required>
-            <div class="msg">{{ msg }}</div>
+            <label for="password">
+            <i class="fas fa-lock"></i></label>
+            <input type="password" name="password" placeholder="Password" id="password" required>
+            {{ msg }}
+            <!--<div class="warning">{{ msg }}</div>-->
             {{ form.recaptcha }}
             {% for error in form.recaptcha.errors %}
             <ul>
                 <li style="color:red;">{{ error }}</li>
                 {% endfor %}
-            </ul>
-            <input type="submit" value="Login">
+            </ul><br><a href='/goo'><i style='color: black; font-size:24px' class='fab fa-google'></i></a>
+            <input type="submit" name="enter" value="Login">
         </form>
+
     </div>
 </body>
 </html>
+
+<!--
