@@ -47,10 +47,11 @@ def login():
             return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
         else:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curuse = (request.form['username'])
+            curuse = request.form['username']
             print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0; UPDATE accounts  SET attempts = attempts + 1 WHERE username = "%s" ', [curuse])
-            cursor.execute('SELECT attempts FROM accounts WHERE attempts = 3')
+            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
+            cursor.execute('SELECT attempts FROM accounts WHERE username = %s', (curuse,))
             mysql.connection.commit()
             account = cursor.fetchone()
             if account:
