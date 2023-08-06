@@ -37,7 +37,7 @@ body {
   	color: #9da3ac;
 }
 .login .links a.active, .register .links a.active {
-  	border-bottom: 3px solid #3274d6;
+  	border-bottom: 3px solid #329999;
   	color: #3274d6;
 }
 .login form, .register form {
@@ -52,7 +52,7 @@ body {
   	align-items: center;
   	width: 50px;
   	height: 50px;
-  	background-color: #3274d6;
+  	background-color: #329999;
   	color: #ffffff;
 }
 .login form input[type="password"], .login form input[type="text"], .login form input[type="email"], .register form input[type="password"], .register form input[type="text"], .register form input[type="email"] {
@@ -66,7 +66,7 @@ body {
   	width: 100%;
   	padding: 15px;
   	margin-top: 20px;
-  	background-color: #3274d6;
+  	background-color: #329999;
   	border: 0;
   	cursor: pointer;
   	font-weight: bold;

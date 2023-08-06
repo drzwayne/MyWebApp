@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forget Password Recovery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+</head>
+<body>
+    <h1>Forget Password Recovery</h1>
+    <form method="post" action="{{ url_for('forget_password') }}">
+        <input type="email" name="email" placeholder="Enter your registered email" required>
+        <button type="submit">Send Recovery Email</button>
+    </form>
+</body>
+</html>

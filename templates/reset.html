@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Password Reset</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+</head>
+<body>
+    <h1>Password Reset</h1>
+    <form method="post" action="{{ url_for('reset_password', reset_token=reset_token) }}">
+        <input type="password" name="password" placeholder="Enter your new password" required>
+        <button type="submit">Reset Password</button>
+    </form>
+</body>
+</html>
