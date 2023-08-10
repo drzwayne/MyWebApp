@@ -225,7 +225,7 @@ def generate_reset_token(token_length=32):
     token = ''.join(secrets.choice(characters) for _ in range(token_length))
     return token
 @app.route('/forget', methods=['GET', 'POST'])
-def forget_password():
+def forget():
     msg = ''
     if request.method == 'POST' and 'email' in request.form:
         email = request.form['email']
@@ -248,11 +248,8 @@ def forget_password():
 
     return render_template('forget.html', msg=msg)
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
-def reset_password(reset_token):
+def reset(reset_token):
     msg = ''
-    # Here, you would validate the reset_token and check if it's valid
-    # For demonstration purposes, we'll assume the reset_token is valid
-
     if request.method == 'POST' and 'password' in request.form:
         new_password = request.form['password']
         # Update the user's password in the database using the reset_token
