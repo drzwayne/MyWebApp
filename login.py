@@ -71,10 +71,10 @@ def login():
         print(user_hashpwd)
         session['id'] = account['id']
         session['username'] = account['username']
-        email_key = account['emailkey']
-        encrypted_email = account['email'].encode()
-        f = Fernet(email_key)
-        decrypted_email = f.decrypt(encrypted_email)
+        #email_key = account['emailkey']
+        #encrypted_email = account['email'].encode()
+        #f = Fernet(email_key)
+        #decrypted_email = f.decrypt(encrypted_email)
         if account and bcrypt.check_password_hash(user_hashpwd, password):
             curuse = request.form['username']
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -85,7 +85,7 @@ def login():
             account = cursor.fetchone()
             print(account)
             session['loggedin'] = True
-            return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+            return render_template('home.html', form=formL, username=username)
             #if account:             #does not go in
             #    print('Account')
             #    session['loggedin'] = True
@@ -201,7 +201,11 @@ def profile():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM accounts WHERE id = %s', (session['id'],))
         account = cursor.fetchone()
-        return render_template('profile.html', account=account)
+        email_key = account['emailkey']
+        encrypted_email = account['email'].encode()
+        f = Fernet(email_key)
+        decrypted_email = f.decrypt(encrypted_email)
+        return render_template('profile.html', account=account, email=decrypted_email.decode())
     elif 'google_id' in session:
         return render_template('profile.html', account=session['name'])
 @app.route('/tetris')
