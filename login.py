@@ -66,30 +66,42 @@ def login():
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
         account = cursor.fetchone()
+        print(account)
         user_hashpwd = account['password']
+        print(user_hashpwd)
+        session['id'] = account['id']
+        session['username'] = account['username']
+        email_key = account['emailkey']
+        encrypted_email = account['email'].encode()
+        f = Fernet(email_key)
+        decrypted_email = f.decrypt(encrypted_email)
         if account and bcrypt.check_password_hash(user_hashpwd, password):
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             curuse = request.form['username']
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             print(curuse)
             cursor.execute('SET SQL_SAFE_UPDATES = 0')
             cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
             mysql.connection.commit()
             account = cursor.fetchone()
-            if account:             #does not go in
-                print('Account')
-                session['loggedin'] = True
-                session['id'] = account['id']
-                session['username'] = account['username']
-                email_key = account['emailkey']
-                encrypted_email = account['email'].encode()
-                f = Fernet(email_key)
-                decrypted_email = f.decrypt(encrypted_email)
-                return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
-            else:
-                session['loggedin'] = True
-                session['id'] = account['id']
-                session['username'] = account['username']
-                return render_template('home.html', form=formL, username=username)
+            print(account)
+            session['loggedin'] = True
+            return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+            #if account:             #does not go in
+            #    print('Account')
+            #    session['loggedin'] = True
+            #    session['id'] = account['id']
+            #    session['username'] = account['username']
+            #    email_key = account['emailkey']
+            #    encrypted_email = account['email'].encode()
+            #    f = Fernet(email_key)
+            #    decrypted_email = f.decrypt(encrypted_email)
+            #    return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+            #else:
+            #    print(account)
+            #    session['loggedin'] = True
+            #    session['id'] = account['id']
+            #    session['username'] = account['username']
+            #    return render_template('home.html', form=formL, username=username)
         else:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             curuse = request.form['username']
@@ -194,9 +206,10 @@ def profile():
         return render_template('profile.html', account=session['name'])
 @app.route('/tetris')
 def tetris():
-    #if 'loggedin' in session:
-    return render_template('tetris.html')
-    #return redirect(url_for('login'))
+    if 'loggedin' in session:
+        return render_template('tetris.html')
+    elif 'google_id' in session:
+        return render_template('tetris.html')
 @app.route('/vone')
 def vone():
     return render_template('vone.html')
