@@ -205,8 +205,9 @@ def profile():
         encrypted_email = account['email'].encode()
         f = Fernet(email_key)
         decrypted_email = f.decrypt(encrypted_email)
-        return render_template('profile.html', account=account, email=decrypted_email.decode())
+        return render_template('profile.html', account=account['username'], email=decrypted_email.decode())
     elif 'google_id' in session:
+        print(session)
         return render_template('profile.html', account=session['name'])
 @app.route('/tetris')
 def tetris():
