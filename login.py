@@ -3,11 +3,7 @@ from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Length, AnyOf
-import re
-import cryptography
-import attempt
+
 from cryptography.fernet import Fernet
 import os
 import pathlib
@@ -19,13 +15,15 @@ from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from pip._vendor import cachecontrol
 import google.auth.transport.requests
+import uuid
+import time
 
 app = Flask("Google Login App")
 bcrypt = Bcrypt(app)
 app.secret_key = "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" # make sure this matches with that's in client_secret.json
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'sql123lqs321'
+app.config['MYSQL_PASSWORD'] = 'mysql'
 app.config['MYSQL_DB'] = 'pythonlogin'
 app.config['MYSQL_PORT'] = 3306
 app.config['SECRET_KEY'] = 'Thisisasecret!'
@@ -45,6 +43,7 @@ flow = Flow.from_client_secrets_file(
     scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
     redirect_uri="http://localhost/callback"
 )
+tokens = {}
 def login_is_required(function):
     def wrapper(*args, **kwargs):
         if "google_id" not in session:
@@ -57,68 +56,52 @@ def login_is_required(function):
 def login():
     msg = ''
     formL = LoginForm()
+
+    # Check if user is already logged in via Google ID
     if "google_id" in session:
         return redirect(url_for("home"))
-    elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        print('c1')
-        username = request.form['username']
-        password = request.form['password']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
-        account = cursor.fetchone()
-        print(account)
-        user_hashpwd = account['password']
-        print(user_hashpwd)
-        session['id'] = account['id']
-        session['username'] = account['username']
-        #email_key = account['emailkey']
-        #encrypted_email = account['email'].encode()
-        #f = Fernet(email_key)
-        #decrypted_email = f.decrypt(encrypted_email)
-        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        #cursor.execute('SET SQL_SAFE_UPDATES = 0')
-        #cursor.execute('UPDATE accounts SET email = %s', (encrypted_email))
-        #mysql.connection.commit()
-        if account and bcrypt.check_password_hash(user_hashpwd, password):
-            curuse = request.form['username']
+
+    elif request.method == 'POST':
+        # Check if the login request is via email for "Magic Link"
+        if 'email' in request.form:
+            email = request.form['email']
+            token = uuid.uuid4().hex
+            tokens[token] = {"email": email, "expiry": time.time() + 600}  # 10 min expiry
+            # Here, send email with link to '/auth/{token}' using an email service/library
+            msg = "Magic link sent to your email!"
+
+        # Otherwise, use the existing username/password logic
+        elif 'username' in request.form and 'password' in request.form:
+            # Your existing authentication logic starts here:
+            username = request.form['username']
+            password = request.form['password']
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
-            mysql.connection.commit()
+            cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
             account = cursor.fetchone()
-            print(account)
-            session['loggedin'] = True
-            return render_template('home.html', form=formL, username=username)
-            #if account:             #does not go in
-            #    print('Account')
-            #    session['loggedin'] = True
-            #    session['id'] = account['id']
-            #    session['username'] = account['username']
-            #    email_key = account['emailkey']
-            #    encrypted_email = account['email'].encode()
-            #    f = Fernet(email_key)
-            #    decrypted_email = f.decrypt(encrypted_email)
-            #    return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
-            #else:
-            #    print(account)
-            #    session['loggedin'] = True
-            #    session['id'] = account['id']
-            #    session['username'] = account['username']
-            #    return render_template('home.html', form=formL, username=username)
-        else:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curuse = request.form['username']
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
-            cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
-            mysql.connection.commit()
-            account = cursor.fetchone()
+
             if account:
-                msg = 'Account locked!'
-            else:
-                msg = 'Incorrect username/password!'
+                user_hashpwd = account['password']
+                session['id'] = account['id']
+                session['username'] = account['username']
+
+                if bcrypt.check_password_hash(user_hashpwd, password):
+                    cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                    cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (username,))
+                    mysql.connection.commit()
+                    session['loggedin'] = True
+                    return render_template('home.html', form=formL, username=username)
+
+                else:
+                    cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                    cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (username,))
+                    cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (username,))
+                    mysql.connection.commit()
+                    account = cursor.fetchone()
+                    if account:
+                        msg = 'Account locked!'
+                    else:
+                        msg = 'Incorrect username/password!'
+
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
 def goo():
@@ -228,6 +211,19 @@ def generate_reset_token(token_length=32):
     characters = string.ascii_letters + string.digits
     token = ''.join(secrets.choice(characters) for _ in range(token_length))
     return token
+@app.route('/auth/<token>')
+def authenticate(token):
+    data = tokens.get(token)
+    if not data:
+        return "Invalid or expired link"
+    if time.time() > data['expiry']:
+        del tokens[token]
+        return "Link expired"
+    # Here, you'd typically create a session for the user and log them in
+    return f"Welcome, {data['email']}!"
+
+if __name__ == "__main__":
+    app.run(debug=True)
 @app.route('/forget', methods=['GET', 'POST'])
 def forget():
     msg = ''
@@ -246,22 +242,32 @@ def forget():
         if nemail in decrypted_emails:
             reset_token = generate_reset_token()
             print("User's email found. Proceed with password reset.", reset_token)
-            msg = 'An email with instructions for password recovery has been sent to your registered email address.'
+            return render_template('reset.html', email=nemail, reset_token=reset_token)
+            #return redirect(url_for('reset', email=nemail, reset_token=reset_token))
+            #msg = 'An email with instructions for password recovery has been sent to your registered email address.'
         else:
             print("User's email not found. Cannot proceed with password reset.")
             msg = 'Email not found. Please enter your registered email address.'
     return render_template('forget.html', msg=msg)
-@app.route('/reset/<reset_token>', methods=['GET', 'POST'])
+
+@app.route('/reset', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-    if request.method == 'POST' and 'password' in request.form:
-        new_password = request.form['password']
-        # Update the user's password in the database using the reset_token
-        # Here, you would implement the database update query to set the new_password for the user
-        # For demonstration purposes, we'll just print the new_password
-        print("New Password:", new_password)
-        msg = 'Password has been successfully reset. You can now log in with your new password.'
-
+    if request.method == 'POST' and 'email' in request.form and 'npassword' in request.form and 'cpassword' in request.form:
+        email = request.form['email']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        print(email)
+        if new_password == confirm_password:
+            hashpwd = bcrypt.generate_password_hash(new_password)
+            print("New Password:", new_password)
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            cursor.execute('UPDATE accounts SET password = %s WHERE email = %s', (hashpwd,email))
+            mysql.connection.commit()
+            msg = 'Password has been successfully reset. You can now log in with your new password.'
+        else:
+            msg = 'Passwords do not match. Please make sure both passwords are the same.'
     return render_template('reset.html', msg=msg, reset_token=reset_token)
 if __name__== '__main__':
     app.run(port=80,debug=True)

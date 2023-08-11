@@ -7,10 +7,24 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
 </head>
 <body>
-    <h1>Password Reset</h1>
-    <form method="post" action="{{ url_for('reset', reset_token=reset_token) }}">
-        <input type="password" name="password" placeholder="Enter your new password" required>
-        <button type="submit">Reset Password</button>
-    </form>
+{% block content %}
+<h2>{{ email }}</h2>
+{% endblock %}
+    <div class="reset">
+        <h1>Password Reset</h1>
+        <form method="post" action="{{ url_for('reset', reset_token=reset_token) }}" autocomplete="off">
+            <label for="password">
+                <i class="fas fa-lock"></i>
+            </label>
+            <input type="password" name="npassword" placeholder="New Password" id="password" required>
+            <label for="confirmpassword">
+                <i class="fas fa-lock"></i>
+            </label>
+            <input type="password" name="cpassword" placeholder="Confirm Password" id="confirmpassword" required>
+            <div class="msg">{{ msg }}</div>
+            <input type="submit" name="Reset Password">
+        </form>
+        <a href="{{ url_for('login') }}" >Back to Login</a>
+    </div>
 </body>
 </html>
