@@ -246,22 +246,31 @@ def forget():
         if nemail in decrypted_emails:
             reset_token = generate_reset_token()
             print("User's email found. Proceed with password reset.", reset_token)
-            msg = 'An email with instructions for password recovery has been sent to your registered email address.'
+            return render_template('reset.html', email=nemail, reset_token=reset_token)
+            #return redirect(url_for('reset', email=nemail, reset_token=reset_token))
+            #msg = 'An email with instructions for password recovery has been sent to your registered email address.'
         else:
             print("User's email not found. Cannot proceed with password reset.")
             msg = 'Email not found. Please enter your registered email address.'
     return render_template('forget.html', msg=msg)
-@app.route('/reset/<reset_token>', methods=['GET', 'POST'])
+@app.route('/reset', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-    if request.method == 'POST' and 'password' in request.form:
-        new_password = request.form['password']
-        # Update the user's password in the database using the reset_token
-        # Here, you would implement the database update query to set the new_password for the user
-        # For demonstration purposes, we'll just print the new_password
-        print("New Password:", new_password)
-        msg = 'Password has been successfully reset. You can now log in with your new password.'
-
+    if request.method == 'POST' and 'email' in request.form and 'npassword' in request.form and 'cpassword' in request.form:
+        email = request.form['email']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        print(email)
+        if new_password == confirm_password:
+            hashpwd = bcrypt.generate_password_hash(new_password)
+            print("New Password:", new_password)
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            cursor.execute('UPDATE accounts SET password = %s WHERE email = %s', (hashpwd,email))
+            mysql.connection.commit()
+            msg = 'Password has been successfully reset. You can now log in with your new password.'
+        else:
+            msg = 'Passwords do not match. Please make sure both passwords are the same.'
     return render_template('reset.html', msg=msg, reset_token=reset_token)
 if __name__== '__main__':
     app.run(port=80,debug=True)
