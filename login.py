@@ -75,6 +75,10 @@ def login():
         #encrypted_email = account['email'].encode()
         #f = Fernet(email_key)
         #decrypted_email = f.decrypt(encrypted_email)
+        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        #cursor.execute('SET SQL_SAFE_UPDATES = 0')
+        #cursor.execute('UPDATE accounts SET email = %s', (encrypted_email))
+        #mysql.connection.commit()
         if account and bcrypt.check_password_hash(user_hashpwd, password):
             curuse = request.form['username']
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
@@ -228,24 +232,24 @@ def generate_reset_token(token_length=32):
 def forget():
     msg = ''
     if request.method == 'POST' and 'email' in request.form:
-        email = request.form['email']
-
-        # Check if the email exists in the database
+        nemail = request.form['email']
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE email = %s', (email,))
-        account = cursor.fetchone()
-
-        if account:
-            # Generate a unique token and send it to the user's email address
+        cursor.execute("SELECT emailkey, email FROM accounts")
+        encrypted_email_data = cursor.fetchall()
+        decrypted_emails = []
+        for row in encrypted_email_data:
+            email_key = row['emailkey']
+            encrypted_email = row['email']
+            f = Fernet(email_key)
+            decrypted_email = f.decrypt(encrypted_email).decode('utf-8')
+            decrypted_emails.append(decrypted_email)
+        if nemail in decrypted_emails:
             reset_token = generate_reset_token()
-            # Here, you would send the reset_token to the user's email using a library like Flask-Mail
-            # The email should contain a link to the reset_password route with the reset_token as a parameter
-            # For demonstration purposes, we'll just print the reset_token
-            print("Reset Token:", reset_token)
+            print("User's email found. Proceed with password reset.", reset_token)
             msg = 'An email with instructions for password recovery has been sent to your registered email address.'
         else:
+            print("User's email not found. Cannot proceed with password reset.")
             msg = 'Email not found. Please enter your registered email address.'
-
     return render_template('forget.html', msg=msg)
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
 def reset(reset_token):
