@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <title>Forget Password</title>
@@ -7,12 +7,17 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
 </head>
 <body>
-<div class="forget">
-    <h1>Forget Password Recovery</h1>
-    <form method="post" action="{{ url_for('forget') }}">
-        <input type="email" name="email" placeholder="Enter your registered email" required>
-        <button type="submit">Send Recovery Email</button>
-    </form>
-</div>
+    <div class="forget">
+        <h1>Forget Password Recovery</h1>
+        <form method="post" action="{{ url_for('forget') }}" autocomplete="off">
+            <label for="email">
+					<i class="fas fa-envelope"></i>
+            </label>
+            <input type="email" name="email" placeholder="Email" id="email" required>
+            <div class="msg">{{ msg }}</div>
+            <input type="submit" value="Send Recovery Email">
+        </form>
+        <a href="{{ url_for('login') }}" >Back to Login</a>
+    </div>
 </body>
 </html>
