@@ -278,8 +278,7 @@ def forget():
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-
-    print(reset_token)
+    print("reset token:", reset_token)
     if request.method == 'POST' and 'npassword' in request.form and 'cpassword' in request.form:
         new_password = request.form['npassword']
         confirm_password = request.form['cpassword']
@@ -289,15 +288,31 @@ def reset(reset_token):
             return render_template('reset.html', msg=msg, reset_token=reset_token)
 
         hashpwd = bcrypt.generate_password_hash(new_password).decode('utf-8')  # Ensure it's a string
-        print("gay password:", hashpwd)
+        print("New Password:", new_password)
+        print("hashed new password:", hashpwd)
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Get the email or username associated with the reset token before updating it
+        cursor.execute('SELECT email FROM accounts WHERE resettoken = %s', (reset_token,))
+        account = cursor.fetchone()
+        if not account:
+            msg = "Invalid or expired reset token."
+            return render_template('reset.html', msg=msg, reset_token=reset_token)
+        email = account['email']
+
         # Update the user's password using the reset_token
         cursor.execute('SET SQL_SAFE_UPDATES = 0')
-        cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s',
-                       (hashpwd, reset_token))
+        cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s', (hashpwd, reset_token))
         mysql.connection.commit()
-        # For demonstration purposes
-        print("New Password:", new_password)
+
+        # Now fetch the hashed password using the email
+        cursor.execute('SELECT password FROM accounts WHERE email = %s', (email,))
+        account = cursor.fetchone()
+
+        # Print the hashed password
+        password = account['password']
+        print("Current Hashed Password:", str(password))
+
 
 
         if cursor.rowcount == 0:
