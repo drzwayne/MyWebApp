@@ -12,16 +12,7 @@
             <th>Details</th>
         </tr>
         <tr>
-            <td colspan="6">{{ audit }}</td>
+            <td colspan="6"><pre>{{ audit_data }}</pre></td>
         </tr>
-        {% for log in audit %}
-        <tr>
-            <td>{{ log.audit_id }}</td>
-            <td>{{ log.timestamp }}</td>
-            <td>{{ log.user_id }}</td>
-            <td>{{ log.event_type }}</td>
-            <td>{{ log.details }}</td>
-        </tr>
-        {% endfor %}
     </table>
 {% endblock %}
