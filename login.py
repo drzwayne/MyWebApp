@@ -278,24 +278,38 @@ def forget():
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-    print(reset_token)
-    if request.method == 'POST' and 'password' in request.form:
-        new_password = request.form['password']
-        hashpwd = bcrypt.generate_password_hash(new_password)
 
+    print(reset_token)
+    if request.method == 'POST' and 'npassword' in request.form and 'cpassword' in request.form:
+        new_password = request.form['npassword']
+        confirm_password = request.form['cpassword']
+
+        if new_password != confirm_password:
+            msg = 'Passwords do not match.'
+            return render_template('reset.html', msg=msg, reset_token=reset_token)
+
+        hashpwd = bcrypt.generate_password_hash(new_password).decode('utf-8')  # Ensure it's a string
+        print("gay password:", hashpwd)
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # Update the user's password using the reset_token
         cursor.execute('SET SQL_SAFE_UPDATES = 0')
         cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s',
                        (hashpwd, reset_token))
-        # Here, you would implement the database update query to set the new_password for the user
-        # For demonstration purposes, we'll just print the new_password
-        print("New Password:", new_password)
-        msg = 'Password has been successfully reset. You can now log in with your new password.'
         mysql.connection.commit()
+        # For demonstration purposes
+        print("New Password:", new_password)
 
+
+        if cursor.rowcount == 0:
+            msg = 'Error updating password or token not found.'
+        else:
+            msg = 'Password has been successfully reset. You can now log in with your new password.'
+            mysql.connection.commit()
 
     return render_template('reset.html', msg=msg, reset_token=reset_token)
+
+
+
 
 if __name__== '__main__':
     app.run(port=80,debug=True)
