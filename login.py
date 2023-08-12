@@ -12,6 +12,7 @@ import pathlib
 import secrets
 import string
 import requests
+import datetime
 from flask import Flask, session, abort, redirect, request
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
@@ -23,7 +24,7 @@ bcrypt = Bcrypt(app)
 app.secret_key = "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" # make sure this matches with that's in client_secret.json
 app.config['MYSQL_HOST'] = '127.0.0.1'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'mysql'
+app.config['MYSQL_PASSWORD'] = 'sql123lqs321'
 app.config['MYSQL_DB'] = 'pythonlogin'
 app.config['MYSQL_PORT'] = 3306
 app.config['SECRET_KEY'] = 'Thisisasecret!'
@@ -50,13 +51,39 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="http://localhost/callback"
 )
 mail = Mail(app)
-@app.route("/actlog", methods=['get','post'])
+@app.route("/actlog", methods=['GET','POST'])
 def actlog():
-    if request.method == 'post' and 'pass' in request.form:
-        if request.form['pass'] == 'ass':
+    if request.method == 'POST' and 'password' in request.form:         #idk your codes here so i added mine below
+        if request.form['password'] == 'ass':
             return render_template('viewactlog')
-
-
+    else:
+        try:
+            ##create table in sql called audit
+            #'''
+            # audit_id  PK, NN, AI      INT
+            # timestamp NN              DATETIME
+            # user_id   NN
+            # event_type NN
+            # details   NN
+            # '''
+            cursor = mysql.connection.cursor()
+            cursor.execute('SELECT * FROM audit')
+            audit = cursor.fetchall()
+            audit_data = '\n'.join(str(row) for row in audit)  # Convert each row to a string
+            return render_template('admin.html', audit_data=audit_data)
+        except Exception as e:
+            print("Error fetching audit log:", str(e))
+def log_audit_event(event_type, user_id, details):
+    try:
+        cursor = mysql.connection.cursor()
+        timestamp = datetime.datetime.now()
+        cursor.execute(
+            "INSERT INTO audit VALUES (Null, %s, %s, %s, %s)",
+            (timestamp, user_id, event_type, details)
+        )
+        mysql.connection.commit()
+    except Exception as e:
+        print("Error logging audit event:", str(e))
 
 def login_is_required(function):
     def wrapper(*args, **kwargs):
@@ -94,6 +121,10 @@ def login():
             mysql.connection.commit()
             account = cursor.fetchone()
             print(account)
+            user_id = session['username']
+            event_type = 'Login'
+            details = 'Successful login'
+            log_audit_event(event_type, user_id, details)
             session['loggedin'] = True
             return render_template('home.html', form=formL, username=username)
 
@@ -271,6 +302,7 @@ def forget():
                 cursor.execute('SET SQL_SAFE_UPDATES = 0')
                 cursor.execute('UPDATE accounts SET resettoken = %s WHERE email = %s', (token, encrypted_email))
                 mysql.connection.commit()  # Ensure that you commit your changes
+                msg = 'Email sent successfully! Check your email inbox'
                 break
         else:
             msg = "Email not found!"

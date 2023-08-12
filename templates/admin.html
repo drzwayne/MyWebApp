@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<h2>Welcome back, {{ username }}!</h2>
+    <h2>Audit Log Entries:</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Timestamp</th>
+            <th>User ID</th>
+            <th>Event Type</th>
+            <th>Details</th>
+        </tr>
+        <tr>
+            <td colspan="6"><pre>{{ audit_data }}</pre></td>
+        </tr>
+    </table>
+{% endblock %}
