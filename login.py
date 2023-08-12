@@ -298,7 +298,6 @@ def forget():
                 # Generate a token and send recovery email
                 token = generate_token()  # Implement a function to generate a token
                 send_recovery_email(decrypted_email, token)  # Implement the function to send an email
-                print("encrypted_email:", decrypted_email)
                 cursor.execute('SET SQL_SAFE_UPDATES = 0')
                 cursor.execute('UPDATE accounts SET resettoken = %s WHERE email = %s', (token, encrypted_email))
                 mysql.connection.commit()  # Ensure that you commit your changes
@@ -311,7 +310,8 @@ def forget():
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-    print("reset token:", reset_token)
+
+    print(reset_token)
     if request.method == 'POST' and 'npassword' in request.form and 'cpassword' in request.form:
         new_password = request.form['npassword']
         confirm_password = request.form['cpassword']
@@ -320,25 +320,19 @@ def reset(reset_token):
             msg = 'Passwords do not match.'
             return render_template('reset.html', msg=msg, reset_token=reset_token)
 
-        hashpwd = bcrypt.generate_password_hash(new_password) # Ensure it's a string
-        print("New Password:", new_password)
-        print("hashed new password:", hashpwd)
+        hashpwd = bcrypt.generate_password_hash(new_password).decode('utf-8')  # Ensure it's a string
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-
-        # Get the email or username associated with the reset token before updating it
         cursor.execute('SELECT email FROM accounts WHERE resettoken = %s', (reset_token,))
         account = cursor.fetchone()
         if not account:
             msg = "Invalid or expired reset token."
             return render_template('reset.html', msg=msg, reset_token=reset_token)
         email = account['email']
-
-        # Update the user's password using the reset_token
         cursor.execute('SET SQL_SAFE_UPDATES = 0')
-        cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s', (hashpwd, reset_token))
+        cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s',(hashpwd, reset_token))
         mysql.connection.commit()
-
-        # Now fetch the hashed password using the email
+        # For demonstration purposes
+        print("New Password:", new_password)
         cursor.execute('SELECT password FROM accounts WHERE email = %s', (email,))
         account = cursor.fetchone()
 
@@ -348,8 +342,6 @@ def reset(reset_token):
         password = account['password']
         print("Current Hashed Password:", str(password))
 
-
-
         if cursor.rowcount == 0:
             msg = 'Error updating password or token not found.'
         else:
@@ -357,9 +349,6 @@ def reset(reset_token):
             mysql.connection.commit()
 
     return render_template('reset.html', msg=msg, reset_token=reset_token)
-
-
-
 
 if __name__== '__main__':
     app.run(port=80,debug=True)
