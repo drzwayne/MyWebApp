@@ -30,6 +30,12 @@ app.config['SECRET_KEY'] = 'Thisisasecret!'
 app.config['RECAPTCHA_PUBLIC_KEY'] = '6LciR-0mAAAAAEukfwSdVCfdo4CJOQ2H6PxeOQ4f' #remove mine and insert yours
 app.config['RECAPTCHA_PRIVATE_KEY'] = '6LciR-0mAAAAAPXpIIsU8WgGK7lgVHW_Vt-WcXyM'  #do the same^^^
 mysql = MySQL(app)
+
+app.config['MAIL_SERVER'] = 'smtp.googlemail.com'  # for gmail
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'gitpain1@gmail.com'  # replace with your email
+app.config['MAIL_PASSWORD'] = 'jbdxievndfsltdlk'
 class LoginForm(FlaskForm):
     recaptcha = RecaptchaField()
 
@@ -43,6 +49,7 @@ flow = Flow.from_client_secrets_file(
     scopes=["https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email", "openid"],
     redirect_uri="http://localhost/callback"
 )
+mail = Mail(app)
 @app.route("/actlog", methods=['get','post'])
 def actlog():
     if request.method == 'post' and 'pass' in request.form:
@@ -220,7 +227,7 @@ def send_recovery_email(email, token):
     try:
         # Craft the password reset link
         # Assuming you have a route named `reset_password` that handles the actual password reset
-        reset_link = url_for('reset_token', token=token, _external=True)
+        reset_link = url_for('reset', reset_token=token, _external=True)
 
         # Create the email message
         msg = Message("Password Reset Request", sender="ass@gmail.com", recipients=[email])
@@ -261,7 +268,9 @@ def forget():
                 # Generate a token and send recovery email
                 token = generate_token()  # Implement a function to generate a token
                 send_recovery_email(decrypted_email, token)  # Implement the function to send an email
-                msg = "Recovery email sent!"
+                cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                cursor.execute('UPDATE accounts SET resettoken = %s WHERE email = %s', (token, encrypted_email))
+                mysql.connection.commit()  # Ensure that you commit your changes
                 break
         else:
             msg = "Email not found!"
@@ -272,7 +281,12 @@ def reset(reset_token):
     msg = ''
     if request.method == 'POST' and 'password' in request.form:
         new_password = request.form['password']
-        # Update the user's password in the database using the reset_token
+        hashpwd = bcrypt.generate_password_hash(new_password)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # Update the user's password using the reset_token
+        cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s',
+                       (hashpwd, reset_token))
         # Here, you would implement the database update query to set the new_password for the user
         # For demonstration purposes, we'll just print the new_password
         print("New Password:", new_password)
