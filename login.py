@@ -98,6 +98,10 @@ def login():
     msg = ''
     formL = LoginForm()
     if "google_id" in session:
+        user_id = session['name']
+        event_type = 'GoogleLogin'
+        details = 'Successful login'
+        log_audit_event(event_type, user_id, details)
         return redirect(url_for("home"))
     elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
         print('c1')
@@ -138,8 +142,16 @@ def login():
             mysql.connection.commit()
             account = cursor.fetchone()
             if account:
+                user_id = session['username']
+                event_type = 'Lock'
+                details = 'Account locked'
+                log_audit_event(event_type, user_id, details)
                 msg = 'Account locked!'
             else:
+                user_id = session['username']
+                event_type = 'Password'
+                details = 'Incorrect password'
+                log_audit_event(event_type, user_id, details)
                 msg = 'Incorrect username/password!'
     return render_template('index.html', msg=msg, form=formL)
 
@@ -147,6 +159,10 @@ def login():
 @app.route("/goo")
 def goo():
     if "google_id" in session:
+        user_id = session['name']
+        event_type = 'GoogleLogin'
+        details = 'Successful login'
+        log_audit_event(event_type, user_id, details)
         return redirect(url_for("home"))  # Redirect to home page if already logged in
 
     # If not logged in, initiate Google OAuth 2.0 login process
@@ -155,6 +171,16 @@ def goo():
     return redirect(authorization_url)
 @app.route('/logout')
 def logout():
+    if 'username' in session:
+        user_id = session['username']
+        event_type = 'Logout'
+        details = 'Successful logout'
+        log_audit_event(event_type, user_id, details)
+    elif 'google_id' in session:
+        user_id = session['name']
+        event_type = 'GoogleLogout'
+        details = 'Successful logout'
+        log_audit_event(event_type, user_id, details)
     session.pop('loggedin', None)
     session.pop('id', None)
     session.pop('username', None)
@@ -183,6 +209,10 @@ def callback():
     # Store user information in the session
     session["google_id"] = id_info.get("sub")
     session["name"] = id_info.get("name")
+    user_id = session['name']
+    event_type = 'GoogleLogin'
+    details = 'Successful login'
+    log_audit_event(event_type, user_id, details)
     return render_template('home.html', username=session["name"])
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -206,7 +236,10 @@ def register():
             email_fernet = Fernet(email_key)
             encrypted_email = email_fernet.encrypt(email)
             attempts = 0
-
+            user_id = username
+            event_type = 'Register'
+            details = 'Successful registration'
+            log_audit_event(event_type, user_id, details)
             cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)',
                            (username, hashpwd, encrypted_email, email_key, attempts,))
             mysql.connection.commit()
@@ -269,8 +302,15 @@ If you did not make this request, please ignore this email.
 
         # Send the email
         mail.send(msg)
-
+        user_id = email
+        event_type = 'Forget'
+        details = 'Successful email confirmation'
+        log_audit_event(event_type, user_id, details)
     except Exception as e:
+        user_id = email
+        event_type = 'Forget'
+        details = 'Failed email confirmation'
+        log_audit_event(event_type, user_id, details)
         print(f"Error sending email: {e}")
     pass
 
@@ -280,7 +320,10 @@ def forget():
     msg = ''
     if request.method == 'POST':
         input_email = request.form.get('email')
-
+        user_id = input_email
+        event_type = 'Forget'
+        details = 'forget password'
+        log_audit_event(event_type, user_id, details)
         # Fetch the account with the inputted email
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute("SELECT * FROM accounts")
@@ -301,9 +344,17 @@ def forget():
                 cursor.execute('SET SQL_SAFE_UPDATES = 0')
                 cursor.execute('UPDATE accounts SET resettoken = %s WHERE email = %s', (token, encrypted_email))
                 mysql.connection.commit()  # Ensure that you commit your changes
+                user_id = input_email
+                event_type = 'Forget'
+                details = 'Successful email sent'
+                log_audit_event(event_type, user_id, details)
                 msg = 'Email sent successfully! Check your email inbox'
                 break
         else:
+            user_id = input_email
+            event_type = 'Forget'
+            details = 'Failed email sent'
+            log_audit_event(event_type, user_id, details)
             msg = "Email not found!"
 
     return render_template('forget.html', msg=msg)
@@ -324,18 +375,29 @@ def reset(reset_token):
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         cursor.execute('SELECT email FROM accounts WHERE resettoken = %s', (reset_token,))
         account = cursor.fetchone()
+        user_id = reset_token
+        event_type = 'Reset'
+        details = 'Reset password'
+        log_audit_event(event_type, user_id, details)
         if not account:
+            user_id = reset_token
+            event_type = 'Reset'
+            details = 'Invalid token'
+            log_audit_event(event_type, user_id, details)
             msg = "Invalid or expired reset token."
             return render_template('reset.html', msg=msg, reset_token=reset_token)
         email = account['email']
         cursor.execute('SET SQL_SAFE_UPDATES = 0')
         cursor.execute('UPDATE accounts SET password = %s, resettoken = NULL WHERE resettoken = %s',(hashpwd, reset_token))
         mysql.connection.commit()
+        user_id = reset_token
+        event_type = 'Reset'
+        details = 'Successful password reset'
+        log_audit_event(event_type, user_id, details)
         # For demonstration purposes
         print("New Password:", new_password)
         cursor.execute('SELECT password FROM accounts WHERE email = %s', (email,))
         account = cursor.fetchone()
-
         affected_rows = cursor.rowcount
         print(f"Rows affected after password update: {affected_rows}")
         # Print the hashed password
@@ -343,6 +405,10 @@ def reset(reset_token):
         print("Current Hashed Password:", str(password))
 
         if cursor.rowcount == 0:
+            user_id = reset_token
+            event_type = 'Reset'
+            details = 'Failed password reset'
+            log_audit_event(event_type, user_id, details)
             msg = 'Error updating password or token not found.'
         else:
             msg = 'Password has been successfully reset. You can now log in with your new password.'
