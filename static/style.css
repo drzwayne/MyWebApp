@@ -55,7 +55,7 @@ body {
   	background-color: #329999;
   	color: #ffffff;
 }
-.login form input[type="password"], .login form input[type="text"], .login form input[type="email"], .register form input[type="password"], .register form input[type="text"], .register form input[type="email"], .reset form input[type='password']{
+.login form input[type="password"], .login form input[type="text"], .login form input[type="email"], .register form input[type="password"], .register form input[type="text"], .register form input[type="email"], .reset form input[type='password'], .forget form input[type='email']{
   	width: 310px;
   	height: 50px;
   	border: 1px solid #dee0e4;
@@ -73,7 +73,7 @@ body {
   	color: #ffffff;
   	transition: background-color 0.2s;
 }
-.login form input[type="submit"]:hover, .register form input[type="submit"]:hover, .forget form input[type='submit']:hover {
+.login form input[type="submit"]:hover, .register form input[type="submit"]:hover, .forget form input[type='submit']:hover, .reset form input[type='submit']:hover {
   	background-color: #2f6277;
   	transition: background-color 0.2s;
 }

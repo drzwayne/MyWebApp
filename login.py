@@ -57,68 +57,71 @@ def login_is_required(function):
 def login():
     msg = ''
     formL = LoginForm()
-    if "google_id" in session:
-        return redirect(url_for("home"))
-    elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        print('c1')
-        username = request.form['username']
-        password = request.form['password']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
-        account = cursor.fetchone()
-        print(account)
-        user_hashpwd = account['password']
-        print(user_hashpwd)
-        session['id'] = account['id']
-        session['username'] = account['username']
-        #email_key = account['emailkey']
-        #encrypted_email = account['email'].encode()
-        #f = Fernet(email_key)
-        #decrypted_email = f.decrypt(encrypted_email)
-        #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        #cursor.execute('SET SQL_SAFE_UPDATES = 0')
-        #cursor.execute('UPDATE accounts SET email = %s', (encrypted_email))
-        #mysql.connection.commit()
-        if account and bcrypt.check_password_hash(user_hashpwd, password):
-            curuse = request.form['username']
+    try:
+        if "google_id" in session:
+            return redirect(url_for("home"))
+        elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+            print('c1')
+            username = request.form['username']
+            password = request.form['password']
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
-            mysql.connection.commit()
+            cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
             account = cursor.fetchone()
             print(account)
-            session['loggedin'] = True
-            return render_template('home.html', form=formL, username=username)
-            #if account:             #does not go in
-            #    print('Account')
-            #    session['loggedin'] = True
-            #    session['id'] = account['id']
-            #    session['username'] = account['username']
-            #    email_key = account['emailkey']
-            #    encrypted_email = account['email'].encode()
-            #    f = Fernet(email_key)
-            #    decrypted_email = f.decrypt(encrypted_email)
-            #    return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
-            #else:
-            #    print(account)
-            #    session['loggedin'] = True
-            #    session['id'] = account['id']
-            #    session['username'] = account['username']
-            #    return render_template('home.html', form=formL, username=username)
-        else:
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curuse = request.form['username']
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
-            cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
-            mysql.connection.commit()
-            account = cursor.fetchone()
-            if account:
-                msg = 'Account locked!'
+            user_hashpwd = account['password']
+            print(user_hashpwd)
+            session['id'] = account['id']
+            session['username'] = account['username']
+            #email_key = account['emailkey']
+            #encrypted_email = account['email'].encode()
+            #f = Fernet(email_key)
+            #decrypted_email = f.decrypt(encrypted_email)
+            #cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            #cursor.execute('SET SQL_SAFE_UPDATES = 0')
+            #cursor.execute('UPDATE accounts SET email = %s', (encrypted_email))
+            #mysql.connection.commit()
+            if account and bcrypt.check_password_hash(user_hashpwd, password):
+                curuse = request.form['username']
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                print(curuse)
+                cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
+                mysql.connection.commit()
+                account = cursor.fetchone()
+                print(account)
+                session['loggedin'] = True
+                return render_template('home.html', form=formL, username=username)
+                #if account:             #does not go in
+                #    print('Account')
+                #    session['loggedin'] = True
+                #    session['id'] = account['id']
+                #    session['username'] = account['username']
+                #    email_key = account['emailkey']
+                #    encrypted_email = account['email'].encode()
+                #    f = Fernet(email_key)
+                #    decrypted_email = f.decrypt(encrypted_email)
+                #    return render_template('home.html', form=formL, username=username, email=decrypted_email.decode())
+                #else:
+                #    print(account)
+                #    session['loggedin'] = True
+                #    session['id'] = account['id']
+                #    session['username'] = account['username']
+                #    return render_template('home.html', form=formL, username=username)
             else:
-                msg = 'Incorrect username/password!'
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                curuse = request.form['username']
+                print(curuse)
+                cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
+                cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
+                mysql.connection.commit()
+                account = cursor.fetchone()
+                if account:
+                    msg = 'Account locked!'
+                else:
+                    msg = 'Incorrect username/password!'
+    except Exception:
+        msg = 'Username does not exist'
     return render_template('index.html', msg=msg, form=formL)
 @app.route("/goo")
 def goo():
@@ -192,7 +195,7 @@ def register():
     return render_template('register.html', msg=msg)
 @app.route('/home')
 def home():
-    if 'loggedin' in session:           #does not work
+    if 'loggedin' in session:
         print('home session')
         return render_template('home.html', username=session['username'])
     elif 'google_id' in session:
@@ -212,7 +215,7 @@ def profile():
         return render_template('profile.html', account=account['username'], email=decrypted_email.decode())
     elif 'google_id' in session:
         print(session)
-        return render_template('profile.html', account=session['name'])
+        return render_template('profile.html', account=session['name'], email=session['name']+'@gmail.com')
 @app.route('/tetris')
 def tetris():
     if 'loggedin' in session:
@@ -246,7 +249,8 @@ def forget():
         if nemail in decrypted_emails:
             reset_token = generate_reset_token()
             print("User's email found. Proceed with password reset.", reset_token)
-            msg = 'An email with instructions for password recovery has been sent to your registered email address.'
+#            msg = 'An email with instructions for password recovery has been sent to your registered email address.'
+            return render_template('reset.html', email=nemail, reset_token=reset_token)
         else:
             print("User's email not found. Cannot proceed with password reset.")
             msg = 'Email not found. Please enter your registered email address.'
@@ -254,14 +258,39 @@ def forget():
 @app.route('/reset/<reset_token>', methods=['GET', 'POST'])
 def reset(reset_token):
     msg = ''
-    if request.method == 'POST' and 'password' in request.form:
-        new_password = request.form['password']
-        # Update the user's password in the database using the reset_token
-        # Here, you would implement the database update query to set the new_password for the user
-        # For demonstration purposes, we'll just print the new_password
-        print("New Password:", new_password)
-        msg = 'Password has been successfully reset. You can now log in with your new password.'
-
+    if request.method == 'POST' and 'email' in request.form and 'npassword' in request.form and 'cpassword' in request.form:
+        email = request.form['email']
+        npassword = request.form['npassword']
+        cpassword = request.form['cpassword']
+        print(email)
+        if npassword == cpassword:
+            hashpwd = bcrypt.generate_password_hash(npassword)
+            print("New Password:", npassword)
+            print(hashpwd.decode())
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute('SELECT id, emailkey, email FROM accounts')
+            encrypted_email_data = cursor.fetchall()
+            decrypted_emails = []
+            for row in encrypted_email_data:
+                email_key = row['emailkey']
+                encrypted_email = row['email']
+                f = Fernet(email_key)
+                decrypted_email = f.decrypt(encrypted_email).decode('utf-8')
+                decrypted_emails.append(decrypted_email)
+                print(decrypted_emails)
+                if email in decrypted_emails:
+                    session['id'] = None
+                    for row in encrypted_email_data:
+                        if email == decrypted_emails[row]:          #problemssss
+                            session['id'] = row['id']
+                            cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                            cursor.execute('UPDATE accounts SET password = %s WHERE id = %s', (hashpwd, session['id']))
+                            mysql.connection.commit()
+                            msg = 'Password has been successfully reset. You can now log in with your new password.'
+                else:
+                    msg = 'Email not found or does not match. Please make sure the email is correct.'
+        else:
+            msg = 'Passwords do not match. Please make sure both passwords are the same.'
     return render_template('reset.html', msg=msg, reset_token=reset_token)
 if __name__== '__main__':
     app.run(port=80,debug=True)
