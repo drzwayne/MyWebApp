@@ -13,6 +13,7 @@
     <div class="reset">
         <h1>Password Reset</h1>
         <form method="post" action="{{ url_for('reset', reset_token=reset_token) }}" autocomplete="off">
+            <input type="hidden" name="email" value="{{ email }}">
             <label for="password">
                 <i class="fas fa-lock"></i>
             </label>

@@ -16,9 +16,6 @@
         <form action="{{ url_for('login') }}" method="post">
             {{ form.csrf_token }}
 
-            <label for="email"><i class="fas fa-envelope"></i></label>
-            <input type="email" name="email" placeholder="Email for Magic Link" id="email">
-            <input type="submit" value="Send Magic Link">
 
             <hr> <!-- Add a separator to distinguish between methods -->
 
