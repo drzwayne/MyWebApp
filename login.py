@@ -302,7 +302,21 @@ def tetris():
 @app.route('/vone')
 def vone():
     return render_template('vone.html')
-
+@app.route('/vtwo')
+def vtwo():
+    return render_template('vtwo.html')
+@app.route('/vtre')
+def vtre():
+    return render_template('vtre.html')
+@app.route('/vfor')
+def vfor():
+    return render_template('vfor.html')
+@app.route('/vfai')
+def vfai():
+    return render_template('vfai.html')
+@app.route('/vjy')
+def vjy():
+    return render_template('vjy.html')
 def generate_reset_token(token_length=32):
     # Generate a cryptographically secure random token
     characters = string.ascii_letters + string.digits
