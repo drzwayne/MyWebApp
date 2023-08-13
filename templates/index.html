@@ -27,9 +27,9 @@
             {{ form.recaptcha }}
             {% for error in form.recaptcha.errors %}
             <ul>
-                <li style="color:red;">{{ error }}</li>
+                <li style="color:black;">{{ error }}</li>
             </ul>          {% endfor %} <br>
-            <a href='/goo'><i style='color: #329999; font-size:24px' class='fab fa-google'></i></a>
+            <a href='/goo' title="Google login"><i style='color: #329999; font-size:24px' class='fab fa-google'></i></a>
             <a href="{{ url_for('forget') }}" style="color: #2f6277">Forget Password</a>
             <input type="submit" name="enter" value="Login">
         </form>

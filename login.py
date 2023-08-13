@@ -92,7 +92,7 @@ def verify():
             event_type = 'PhoneLogin'
             details = 'Successful OTP login'
             log_audit_event(event_type, user_id, details)
-            return redirect(url_for('home'))
+            return render_template('home.html', username=session['phone_number'])
         else:
             flash('Invalid OTP!', 'danger')
             user_id = session['phone_number']
@@ -183,7 +183,7 @@ def login():
             session['id'] = account['id']
             session['username'] = account['username']
 
-            if account and bcrypt.check_password_hash(user_hashpwd, password):
+            if account and bcrypt.check_password_hash(user_hashpwd, password) and formL.validate_on_submit():
                 curuse = request.form['username']
                 cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
                 print(curuse)
@@ -327,6 +327,8 @@ def home():
         return render_template('home.html', username=session['username'])
     elif 'google_id' in session:
         return render_template('home.html', username=session['name'])
+    elif 'phone_number' in session:
+        return render_template('home.html', username=session['phone_number'])
     return redirect(url_for('login'))
 @app.route('/profile')
 def profile():
@@ -343,6 +345,8 @@ def profile():
     elif 'google_id' in session:
         print(session)
         return render_template('profile.html', account=session['name'], email=session['name']+'@gmail.com')
+    elif 'phone_number' in session:
+        return render_template('profile.html', account=session['phone_number'])
     else:
         return redirect(url_for('login'))
 @app.route('/tetris')
@@ -350,6 +354,8 @@ def tetris():
     if 'loggedin' in session:
         return render_template('tetris.html')
     elif 'google_id' in session:
+        return render_template('tetris.html')
+    elif 'phone_number' in session:
         return render_template('tetris.html')
     else:
         return redirect(url_for('login'))
@@ -365,6 +371,40 @@ def vtre():
 @app.route('/vfor')
 def vfor():
     return render_template('vfor.html')
+@app.route('/vdg', methods=['GET', 'POST'])
+def vdg():
+    if request.method == 'POST' and 'password' in request.form:
+        pin = request.form['password']
+        if pin == '8888':
+            user_id = session.get('name')
+            event_type = 'Video restrict, Google'
+            details = 'Successful video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            user_id = session.get('username')
+            event_type = 'Video restrict'
+            details = 'Successful video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            user_id = session.get('phone_number')
+            event_type = 'Video restrict, Phone'
+            details = 'Successful video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            return render_template('vfor.html')
+        else:
+            user_id = session.get('name')
+            event_type = 'Video restrict, Google'
+            details = 'Failed video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            user_id = session.get('username')
+            event_type = 'Video restrict'
+            details = 'Failed video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            user_id = session.get('phone_number')
+            event_type = 'Video restrict, Phone'
+            details = 'Failed video unrestriction'
+            log_audit_event(event_type, user_id, details)
+            msg = 'Invalid PIN'
+            return render_template('vdg.html', msg=msg)
+    return render_template('vdg.html')
 @app.route('/vfai')
 def vfai():
     return render_template('vfai.html')
