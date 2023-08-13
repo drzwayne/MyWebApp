@@ -7,19 +7,16 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
 </head>
 <body>
-<a href="{{ url_for('actlog') }}" id="activityLogBtn">Activity Log</a>
+<a href="{{ url_for('actlog') }}" id="activityLogBtn" style="color: #2f6277">Activity Log</a>
     <div class="login">
         <h1>Login</h1>
         <div class="links">
             <a href="{{ url_for('login') }}" class="active">Login</a>
             <a href="{{ url_for('register')}}">Register</a>
+            <a href="{{ url_for('send')}}">Phone Login</a>
         </div>
         <form action="{{ url_for('login') }}" method="post">
             {{ form.csrf_token }}
-
-
-            <hr> <!-- Add a separator to distinguish between methods -->
-
             <label for="username"><i class="fas fa-user"></i></label>
             <input type="text" name="username" placeholder="Username" id="username" required>
             <label for="password">
@@ -31,9 +28,9 @@
             {% for error in form.recaptcha.errors %}
             <ul>
                 <li style="color:red;">{{ error }}</li>
-            {% endfor %}
-            </ul><br><a href='/goo'><i style='color: black; font-size:24px' class='fab fa-google'></i></a>
-            <a href="{{ url_for('forget') }}">Forget Password</a>
+            </ul>          {% endfor %} <br>
+            <a href='/goo'><i style='color: #329999; font-size:24px' class='fab fa-google'></i></a>
+            <a href="{{ url_for('forget') }}" style="color: #2f6277">Forget Password</a>
             <input type="submit" name="enter" value="Login">
         </form>
 

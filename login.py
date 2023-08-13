@@ -1,5 +1,5 @@
 import mail
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from flask_bcrypt import Bcrypt
@@ -7,6 +7,7 @@ from flask_wtf import FlaskForm, RecaptchaField
 from oauthlib.common import generate_token
 from flask_mail import Mail, Message
 from cryptography.fernet import Fernet
+from twilio.rest import Client
 import os
 import pathlib
 import secrets
@@ -51,6 +52,59 @@ flow = Flow.from_client_secrets_file(
     redirect_uri="http://localhost/callback"
 )
 mail = Mail(app)
+
+account_sid ="ACb15c4415fb798a5d19fb503d195bf464" #'ACed3d1d976f65332ac83158ba83572744' #"ACb15c4415fb798a5d19fb503d195bf464"
+auth_token = "980e04b734f181d9664f63fb0b6b1130"#'105e3c1bad45b786c33fd75d3370f7aa' #"980e04b734f181d9664f63fb0b6b1130"
+verify_sid = "VA46c7644a74f4c8feb0daecb15efb375f"
+client = Client(account_sid, auth_token)
+
+def convert_to_e164(raw_phone):
+    """Convert a raw phone number to E.164 format."""
+    if not raw_phone:
+        return
+    # Remove all non-numeric characters
+    phone_numeric = ''.join(filter(str.isdigit, raw_phone))
+    # Add country code for Singapore ('+65') in this case
+    return phone_numeric
+@app.route('/send', methods=['GET', 'POST'])
+def send():
+    if request.method == 'POST':
+        phone_number = request.form['phone_number']
+        session['phone_number'] = phone_number
+        verification = client.verify.v2.services(verify_sid) \
+          .verifications \
+          .create(to=phone_number, channel="sms")
+        return redirect(url_for('verify'))
+    return render_template('send.html')
+
+@app.route('/verify', methods=['GET', 'POST'])
+def verify():
+    if request.method == 'POST':
+        otp_code = request.form['otp_code']
+
+        verification_check = client.verify.v2.services(verify_sid) \
+          .verification_checks \
+          .create(to=session['phone_number'], code=otp_code)
+
+        if verification_check.status == 'approved':
+            flash('OTP Verified Successfully!', 'success')
+            user_id = session['phone_number']
+            event_type = 'PhoneLogin'
+            details = 'Successful OTP login'
+            log_audit_event(event_type, user_id, details)
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid OTP!', 'danger')
+            user_id = session['phone_number']
+            event_type = 'PhoneLogin'
+            details = 'Failed OTP login'
+            log_audit_event(event_type, user_id, details)
+
+    return render_template('verify.html')
+
+@app.route('/success')
+def success():
+    return "OTP Verification Successful!"
 @app.route("/actlog", methods=['GET','POST'])
 def actlog():
     if request.method == 'POST' and 'password' in request.form:

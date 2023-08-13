@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enter Phone Number</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css">
+</head>
+<body>
+    <div class="send">
+        <h1>Enter Your Phone Number</h1>
+        <form action="{{ url_for('send') }}" method="post">
+            <input type="tel" name="phone_number" placeholder="Enter Phone Number" required>
+            <input type="submit" value="Send OTP">
+        </form>
+        <a href="{{ url_for('login') }}" style="color: #2f6277">Back to Login</a>
+    </div>
+</body>
+</html>

@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
-<!DOCTYPE html>
 <html>
 	<head>
 		<meta charset="utf-8">
@@ -14,6 +12,7 @@
 			<div class="links">
 				<a href="{{ url_for('login') }}?ou=259139">Login</a>
 				<a href="{{ url_for('register') }}?ou=259139" class="active">Register</a>
+				<a href="{{ url_for('send')}}">Phone Login</a>
 			</div>
 			<form action="{{ url_for('register') }}" method="post" autocomplete="off">
 				<label for="username">
