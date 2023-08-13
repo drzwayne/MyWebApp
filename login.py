@@ -53,12 +53,11 @@ flow = Flow.from_client_secrets_file(
 mail = Mail(app)
 @app.route("/actlog", methods=['GET','POST'])
 def actlog():
-    if request.method == 'POST' and 'password' in request.form:         #idk your codes here so i added mine below
-        if request.form['password'] == 'ass':
-            return render_template('viewactlog')
-    else:
-        try:
-            ##create table in sql called audit
+    if request.method == 'POST' and 'password' in request.form:
+        admin = request.form['password']
+        if admin == 'admin':
+            try:
+                            ##create table in sql called audit
             #'''
             # audit_id  PK, NN, AI      INT
             # timestamp NN              DATETIME
@@ -66,13 +65,26 @@ def actlog():
             # event_type NN
             # details   NN
             # '''
-            cursor = mysql.connection.cursor()
-            cursor.execute('SELECT * FROM audit')
-            audit = cursor.fetchall()
-            audit_data = '\n'.join(str(row) for row in audit)  # Convert each row to a string
-            return render_template('admin.html', audit_data=audit_data)
-        except Exception as e:
-            print("Error fetching audit log:", str(e))
+                cursor = mysql.connection.cursor()
+                #cursor.execute('DELETE FROM audit')
+                #mysql.connection.commit()
+                cursor.execute('SELECT * FROM audit')
+                audit = cursor.fetchall()
+                audit_data = '\n'.join(str(row) for row in audit)  # Convert each row to a string
+                return render_template('admin.html', audit_data=audit_data)
+            except Exception as e:
+                print("Error fetching audit log:", str(e))
+    return render_template('actlog.html')
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if request.method == 'POST':
+        cursor = mysql.connection.cursor()
+        cursor.execute('DELETE FROM audit')
+        mysql.connection.commit()
+        cursor.execute('SELECT * FROM audit')
+        audit = cursor.fetchall()
+        audit_data = '\n'.join(str(row) for row in audit)
+        return render_template('admin.html', audit_data=audit_data)
 def log_audit_event(event_type, user_id, details):
     try:
         cursor = mysql.connection.cursor()
@@ -97,62 +109,69 @@ def login_is_required(function):
 def login():
     msg = ''
     formL = LoginForm()
-    if "google_id" in session:
-        user_id = session['name']
-        event_type = 'GoogleLogin'
-        details = 'Successful login'
-        log_audit_event(event_type, user_id, details)
-        return redirect(url_for("home"))
-    elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        print('c1')
-        username = request.form['username']
-        password = request.form['password']
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
-        account = cursor.fetchone()
-        print(account)
-        user_hashpwd = account['password']
-        print(user_hashpwd)
-        session['id'] = account['id']
-        session['username'] = account['username']
-
-        if account and bcrypt.check_password_hash(user_hashpwd, password):
-            curuse = request.form['username']
-            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
-            mysql.connection.commit()
-            account = cursor.fetchone()
-            print(account)
-            user_id = session['username']
-            event_type = 'Login'
+    try:
+        if "google_id" in session:
+            user_id = session['name']
+            event_type = 'GoogleLogin'
             details = 'Successful login'
             log_audit_event(event_type, user_id, details)
-            session['loggedin'] = True
-            return render_template('home.html', form=formL, username=username)
-
-        else:
+            return redirect(url_for("home"))
+        elif request.method == 'POST' and 'username' in request.form and 'password' in request.form:
+            print('c1')
+            username = request.form['username']
+            password = request.form['password']
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curuse = request.form['username']
-            print(curuse)
-            cursor.execute('SET SQL_SAFE_UPDATES = 0')
-            cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
-            cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
-            mysql.connection.commit()
+            cursor.execute('SELECT * FROM accounts WHERE username = %s', (username,))
             account = cursor.fetchone()
-            if account:
+            print(account)
+            user_hashpwd = account['password']
+            print(user_hashpwd)
+            session['id'] = account['id']
+            session['username'] = account['username']
+
+            if account and bcrypt.check_password_hash(user_hashpwd, password):
+                curuse = request.form['username']
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                print(curuse)
+                cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                cursor.execute('UPDATE accounts SET attempts = 0 WHERE username = %s', (curuse,))
+                mysql.connection.commit()
+                account = cursor.fetchone()
+                print(account)
                 user_id = session['username']
-                event_type = 'Lock'
-                details = 'Account locked'
+                event_type = 'Login'
+                details = 'Successful login'
                 log_audit_event(event_type, user_id, details)
-                msg = 'Account locked!'
+                session['loggedin'] = True
+                return render_template('home.html', form=formL, username=username)
+
             else:
-                user_id = session['username']
-                event_type = 'Password'
-                details = 'Incorrect password'
-                log_audit_event(event_type, user_id, details)
-                msg = 'Incorrect username/password!'
+                cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+                curuse = request.form['username']
+                print(curuse)
+                cursor.execute('SET SQL_SAFE_UPDATES = 0')
+                cursor.execute('UPDATE accounts SET attempts = attempts + 1 WHERE username = %s', (curuse,))
+                cursor.execute('SELECT attempts FROM accounts WHERE username = %s AND attempts >2', (curuse,))
+                mysql.connection.commit()
+                account = cursor.fetchone()
+                if account:
+                    user_id = session['username']
+                    event_type = 'Login'
+                    details = 'Account locked'
+                    log_audit_event(event_type, user_id, details)
+                    msg = 'Account locked!'
+                else:
+                    user_id = session['username']
+                    event_type = 'Login'
+                    details = 'Incorrect password'
+                    log_audit_event(event_type, user_id, details)
+                    msg = 'Incorrect username/password!'
+    except Exception:
+        user_id = request.remote_addr
+        event_type = 'Login'
+        details = 'Invalid username'
+        log_audit_event(event_type, user_id, details)
+        msg = 'Username does not exist'
     return render_template('index.html', msg=msg, form=formL)
 
 
@@ -240,7 +259,7 @@ def register():
             event_type = 'Register'
             details = 'Successful registration'
             log_audit_event(event_type, user_id, details)
-            cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s)',
+            cursor.execute('INSERT INTO accounts VALUES (NULL, %s, %s, %s, %s, %s, NULL)',
                            (username, hashpwd, encrypted_email, email_key, attempts,))
             mysql.connection.commit()
             msg = 'You have successfully registered!'
@@ -269,13 +288,17 @@ def profile():
         return render_template('profile.html', account=account['username'], email=decrypted_email.decode())
     elif 'google_id' in session:
         print(session)
-        return render_template('profile.html', account=session['name'])
+        return render_template('profile.html', account=session['name'], email=session['name']+'@gmail.com')
+    else:
+        return redirect(url_for('login'))
 @app.route('/tetris')
 def tetris():
     if 'loggedin' in session:
         return render_template('tetris.html')
     elif 'google_id' in session:
         return render_template('tetris.html')
+    else:
+        return redirect(url_for('login'))
 @app.route('/vone')
 def vone():
     return render_template('vone.html')
@@ -322,7 +345,7 @@ def forget():
         input_email = request.form.get('email')
         user_id = input_email
         event_type = 'Forget'
-        details = 'forget password'
+        details = 'Forget password'
         log_audit_event(event_type, user_id, details)
         # Fetch the account with the inputted email
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

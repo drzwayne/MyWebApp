@@ -14,5 +14,9 @@
         <tr>
             <td colspan="6"><pre>{{ audit_data }}</pre></td>
         </tr>
+        <tr>
+            <td colspan="5"></td>
+            <td><form method="POST" action="{{ url_for('admin') }}"><input type="submit" value="clear"></form></td>
+        </tr>
     </table>
 {% endblock %}
