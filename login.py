@@ -54,7 +54,7 @@ flow = Flow.from_client_secrets_file(
 mail = Mail(app)
 
 account_sid ="ACb15c4415fb798a5d19fb503d195bf464" #'ACed3d1d976f65332ac83158ba83572744' #"ACb15c4415fb798a5d19fb503d195bf464"
-auth_token = "980e04b734f181d9664f63fb0b6b1130"#'105e3c1bad45b786c33fd75d3370f7aa' #"980e04b734f181d9664f63fb0b6b1130"
+auth_token = "5a985c5566c5e42184022c809b460612"#'105e3c1bad45b786c33fd75d3370f7aa' #"980e04b734f181d9664f63fb0b6b1130"
 verify_sid = "VA46c7644a74f4c8feb0daecb15efb375f"
 client = Client(account_sid, auth_token)
 
